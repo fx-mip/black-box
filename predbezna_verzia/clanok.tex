@@ -1,0 +1,450 @@
+% Metódy inžinierskej práce
+
+\documentclass[10pt,twoside,slovak,a4paper]{article}
+
+\usepackage[slovak]{babel}
+%\usepackage[T1]{fontenc}
+\usepackage[IL2]{fontenc} % lepšia sadzba písmena Ľ než v T1
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{positioning,fit,arrows.meta}
+\usepackage{url} % príkaz \url na formátovanie URL
+\usepackage{hyperref} % odkazy v texte budú aktívne (pri niektorých triedach dokumentov spôsobuje posun textu)
+
+\usepackage{cite}
+%\usepackage{times}
+
+\pagestyle{headings}
+
+\title{Black Box: včasné varovanie študentov pred študijným preťažením\thanks{Semestrálny projekt v predmete Metódy inžinierskej práce, ak. rok 2026/27, vedenie: \textcolor{red}{Meno Priezvisko}}} % meno a priezvisko vyučujúceho na cvičeniach
+
+\author{Kyryl Tkachenko, Tymofii Trembovetskyi, Alex Vyšný\\[2pt]
+	{\small Slovenská technická univerzita v Bratislave}\\
+	{\small Fakulta informatiky a informačných technológií}\\
+	{\small \texttt{xtkachenko@stuba.sk}\quad\texttt{xtrembovetskyi@stuba.sk}\quad\texttt{xvysny@stuba.sk}}
+	}
+
+\date{\small 30. október 2026}
+
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Vysokoškolskí študenti dostávajú termíny zadaní, testov a~skúšok z~viacerých
+zdrojov a~že sa v~niektorom týždni nahromadí priveľa povinností, často zistia
+až vtedy, keď je neskoro. Dlhodobé preťaženie pritom patrí medzi hlavné príčiny
+stresu a~vyhorenia študentov. V~článku prinášame prehľad poznatkov o~študijnej
+záťaži a~jej vnímaní, o~nástrojoch na sledovanie pohody a~o~systémoch včasného
+varovania vo vzdelávaní aj mimo neho. Ukazujeme, že existujúce riešenia buď
+termíny iba zobrazujú, alebo sledujú pohodu bez väzby na konkrétne povinnosti,
+a~že takmer všetky ukladajú citlivé údaje mimo zariadenia používateľa. Na tomto
+základe navrhujeme lokálnu aplikáciu Black Box, ktorá z~odhadov časovej
+náročnosti termínov počíta týždennú záťaž, 7 až 14 dní vopred varuje pred
+preťaženým týždňom a~po náročnom období zobrazí časovú os termínov, záťaže
+a~zaznamenaných pocitov. Opisujeme model výpočtu záťaže inšpirovaný
+sledovaním tréningovej záťaže športovcov, architektúru typu local-first
+a~plán overenia s~merateľnými ukazovateľmi.
+\end{abstract}
+
+
+
+\section{Úvod}
+
+Študent v~priebehu semestra pracuje naraz na piatich až siedmich predmetoch.
+Termíny odovzdania zadaní sú v~informačnom systéme školy, zmeny termínov
+testov prichádzajú e-mailom a~dohody o~tímových stretnutiach vznikajú
+v~skupinových chatoch. Každý zdroj osve vyzerá zvládnuteľne. Problém nastáva,
+keď sa termíny z~rôznych predmetov zbehnú do toho istého týždňa: študent si to
+uvedomí až pár dní vopred, keď už nemá priestor prácu rozložiť.
+
+Že takéto obdobia nie sú náhodné, ale opakujú sa v~predvídateľnom rytme
+semestra, ukázal projekt StudentLife~\cite{Wang:StudentLife}. Autori počas
+desiatich týždňov sledovali 48 študentov pomocou senzorov smartfónu
+a~krátkych dotazníkov a~zistili, že stres stúpa a~spánok aj fyzická aktivita
+klesajú práve v~obdobiach so zvýšeným počtom termínov. Táto štúdia bola
+prvotným podnetom pre našu tému. Ak sa záťaž dá v~dátach spätne rozpoznať,
+dá sa ju aj vopred predpovedať, a~to z~údajov, ktoré študent pozná: z~termínov
+a~z~odhadu, koľko práce si vyžiadajú.
+
+Aplikáciu, ktorú navrhujeme, sme nazvali Black Box podľa letovej
+zapisovacej jednotky. Tá turbulencii nezabráni, ale zaznamená, čo sa stalo,
+aby sa z~toho dalo poučiť. Naša aplikácia ide o~krok ďalej: okrem záznamu sa
+snaží na turbulenciu upozorniť skôr, než nastane.
+
+Článok je usporiadaný takto. V~časti~\ref{s:problem} zhŕňame poznatky
+o~strese, vyhorení a~vnímaní študijnej záťaže. Časť~\ref{s:pristupy}
+prehľadne porovnáva existujúce prístupy: kalendáre, nástroje na sledovanie
+pohody, systémy včasného varovania vo vzdelávaní a~analogické riešenie zo
+športovej vedy. V~časti~\ref{s:navrh} opisujeme návrh aplikácie Black Box
+vrátane modelu výpočtu záťaže a~architektúry. Časť~\ref{s:overenie} predstavuje
+plán overenia a~merateľné ukazovatele. Otvorené otázky rozoberáme
+v~časti~\ref{s:diskusia} a~záverečné poznámky prináša časť~\ref{s:zaver}.
+
+
+
+\section{Preťaženie študentov a~jeho príčiny} \label{s:problem}
+
+\subsection{Stres a~vyhorenie}
+
+Vyhorenie je podľa Maslachovej a~Leitera dlhodobá reakcia na chronické
+pracovné stresory, ktorá má tri zložky: vyčerpanie, cynizmus (odstup od
+práce) a~pocit neúčinnosti~\cite{Maslach:Burnout}. Schaufeli a~kol. ukázali,
+že tento koncept sa dá preniesť aj na štúdium: štúdium je pre študenta prácou
+so zadanými úlohami a~termínmi a~vyhorenie študentov sa dá spoľahlivo merať
+v~rôznych krajinách~\cite{Schaufeli:Burnout}. Pre náš projekt je dôležité
+najmä to, že vyhorenie nevzniká naraz, ale hromadí sa z~opakovaných období
+preťaženia.
+
+Rozsah problému dokladajú aj veľké prieskumy. Medzinárodný projekt Svetovej
+zdravotníckej organizácie zistil, že približne 35\,\% študentov prvého
+ročníka malo počas života a~31\,\% za posledných 12 mesiacov príznaky
+aspoň jednej z~bežných duševných porúch~\cite{Auerbach:WMH}. Prehľad Pascoeovej
+a~kol. zhŕňa, že akademický stres, najmä tlak termínov a~skúšok, znižuje
+študijný výkon, motiváciu a~zvyšuje riziko predčasného ukončenia
+štúdia~\cite{Pascoe:Stress}.
+
+\subsection{Vnímaná a~skutočná záťaž}
+
+Kember upozorňuje, že pocit preťaženia nezodpovedá jednoducho počtu hodín,
+ktoré študent strávi učením~\cite{Kember:Workload}. Vnímanie záťaže závisí
+aj od toho, ako je organizovaná výučba a~hodnotenie, ako náročné je učivo
+pochopiť a~aká je motivácia študenta. Z~toho pre nás vyplývajú dva
+dôsledky. Po prvé, nestačí sledovať celkový počet hodín za semester, ale jeho
+rozloženie v~čase. Po druhé, objektívny odhad záťaže treba dopĺňať
+subjektívnym údajom o~tom, ako sa študent cíti.
+
+\subsection{Prečo študenti preťaženie nepredvídajú}
+
+Aj keby mal študent všetky termíny pred očami, predpoveď záťaže mu sťažujú
+dva dobre zdokumentované javy. Prvým je \emph{plánovací klam}: ľudia
+systematicky podceňujú, koľko času im úloha zaberie, a~to aj vtedy, keď
+vedia, že podobné úlohy v~minulosti trvali dlhšie~\cite{Buehler:Planning}.
+Druhým je \emph{prokrastinácia}: metaanalýza Steela ukazuje, že úsilie sa
+s~blížiacim sa termínom prudko zvyšuje a~že odkladanie je medzi študentmi
+mimoriadne rozšírené~\cite{Steel:Procrastination}. Výsledkom je, že práca na
+viacerých termínoch sa v~skutočnosti sústredí do niekoľkých dní pred nimi
+a~prekryv termínov sa prejaví silnejšie, než by naznačoval rovnomerný plán.
+
+Oba javy priamo ovplyvňujú návrh nášho modelu. Odhad hodín od používateľa
+nemôžeme brať doslova, ale musíme ho kalibrovať podľa toho, ako sa jeho
+odhady v~minulosti zhodovali so skutočnosťou. Prácu na termíne nemáme
+rozkladať rovnomerne, ale s~väčšou váhou na dni tesne pred ním.
+
+
+
+\section{Existujúce prístupy} \label{s:pristupy}
+
+\subsection{Kalendáre a~plánovače úloh}
+
+Bežné kalendáre a~zoznamy úloh dokážu zhromaždiť termíny z~viacerých zdrojov,
+najmä vďaka štandardu iCalendar~\cite{RFC5545}, ktorý podporuje aj väčšina
+univerzitných informačných systémov. Termín je však v~nich iba bod v~čase.
+Kalendár nevie, že za odovzdaním projektu je dvadsať hodín práce a~za
+priebežným testom päť, a~preto nedokáže povedať, ktorý týždeň bude ťažký.
+Taký úsudok zostáva na študentovi, ktorý ho podľa
+časti~\ref{s:problem} robí systematicky zle.
+
+\subsection{Sledovanie pohody a~osobná informatika}
+
+Na opačnej strane sú nástroje, ktoré sledujú, ako sa človek cíti.
+Metodicky vychádzajú z~\emph{ekologického momentového hodnotenia} (EMA), pri
+ktorom respondent opakovane hodnotí svoj stav v~prirodzenom prostredí,
+namiesto toho, aby si ho neskôr spätne vybavoval~\cite{Shiffman:EMA}. Takýto
+záznam je presnejší ako dotazník na konci obdobia, pretože ho neskresľuje
+pamäť. StudentLife~\cite{Wang:StudentLife} kombinoval krátke EMA dotazníky
+s~pasívnymi senzormi a~ukázal, že zmeny pohody súvisia s~priebehom semestra.
+Išlo však o~výskumný nástroj: údaje sa odosielali na server a~vyhodnocovali
+ich výskumníci, nie samotní študenti.
+
+Li, Dey a~Forlizzi opísali systémy \emph{osobnej informatiky} piatimi
+etapami: príprava, zber, integrácia, reflexia a~akcia~\cite{Li:PersonalInformatics}.
+Podľa ich zistení používatelia najčastejšie zlyhávajú pri integrácii údajov
+z~rôznych zdrojov a~pri reflexii, teda pri hľadaní súvislostí. Väčšina
+aplikácií na sledovanie nálady končí pri zbere: ukáže graf nálady, ale
+nepovie, čím bol spôsobený, lebo o~termínoch nič nevie.
+
+\subsection{Systémy včasného varovania vo vzdelávaní}
+
+V~oblasti učiacej sa analytiky vznikli systémy, ktoré varujú pred
+neúspechom v~predmete. Známym príkladom je Course Signals na Purdueovej
+univerzite, ktorý zo známok a~aktivity v~systéme na riadenie výučby
+priraďoval študentom semafor rizika~\cite{Arnold:CourseSignals}. Tieto
+systémy sú inštitucionálne: údaje spracúva škola, varovanie sa týka jedného
+predmetu a~cieľom je študijný výsledok, nie celková záťaž študenta naprieč
+predmetmi.
+
+\subsection{Analógia zo športu: sledovanie tréningovej záťaže}
+
+Najbližšie k~nášmu problému má prístup, ktorý sa používa v~športovej vede.
+Tréneri sledujú záťaž športovca a~porovnávajú záťaž posledného týždňa
+s~priemerom predchádzajúcich štyroch týždňov. Gabbett ukázal, že riziko
+zranenia nestúpa ani tak s~celkovým objemom tréningu, ako s~jeho prudkým
+nárastom oproti tomu, na čo je športovec zvyknutý~\cite{Gabbett:ACWR}. Tento
+\emph{pomer akútnej a~chronickej záťaže} (ACWR) je jednoduchý a~zrozumiteľný,
+čo je pre aplikáciu určenú bežnému používateľovi výhoda.
+
+Impellizzeri a~kol. však upozorňujú na jeho metodické slabiny: pomer je
+nestabilný pri malej chronickej záťaži, napríklad na začiatku obdobia,
+a~jeho prahové hodnoty sa nedajú preberať bez overenia v~konkrétnom
+kontexte~\cite{Impellizzeri:ACWR}. Z~analógie preto preberáme myšlienku
+porovnávať záťaž s~individuálnym zvykom, ale nie konkrétne prahy. Tie
+musíme overiť na študentoch.
+
+\subsection{Súkromie údajov o~pohode}
+
+Údaje o~tom, ako sa človek cíti, môžu súvisieť s~jeho zdravím. Všeobecné
+nariadenie o~ochrane údajov ich v~takom prípade radí medzi osobitné kategórie
+osobných údajov s~prísnejšou ochranou~\cite{GDPR} a~v~Slovenskej republike
+ho dopĺňa zákon č.~18/2018~Z.\,z.~\cite{Zakon18}. Prax aplikácií pre duševné
+zdravie je pritom nepriaznivá. Huckvale a~kol. zistili, že 33 z~36
+skúmaných aplikácií pre depresiu a~odvykanie od fajčenia odosielalo údaje
+tretím stranám, najmä reklamným a~analytickým službám, a~len časť z~nich to
+uviedla v~zásadách ochrany súkromia~\cite{Huckvale:Privacy}.
+
+Alternatívou je prístup \emph{local-first}, ktorý Kleppmann a~kol.
+charakterizujú siedmimi ideálmi; medzi nimi sú práca bez pripojenia,
+dlhodobá dostupnosť údajov a~to, že používateľ má nad svojimi údajmi
+plnú kontrolu~\cite{Kleppmann:LocalFirst}. Pri osobných údajoch o~pohode je
+najbezpečnejším riešením, keď sa zo zariadenia vôbec nedostanú.
+
+\subsection{Zhrnutie}
+
+Tabuľka~\ref{t:porovnanie} porovnáva jednotlivé skupiny prístupov podľa
+piatich vlastností, ktoré považujeme pre náš problém za podstatné. Žiadny
+z~nich nespája termíny, predpoveď záťaže a~záznam pohody v~nástroji, ktorý by
+mal študent pod vlastnou kontrolou.
+
+\begin{table}[tbh]
+\centering
+\caption{Porovnanie existujúcich prístupov (\textbullet{} áno,
+$\circ$ čiastočne, -- nie).}
+\label{t:porovnanie}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Prístup & Termíny & Predpoveď & Pohoda & Reflexia & Lokálne \\
+\midrule
+Kalendáre, plánovače              & \textbullet & --          & --          & --          & $\circ$ \\
+Aplikácie na sledovanie nálady    & --          & --          & \textbullet & $\circ$     & $\circ$ \\
+StudentLife~\cite{Wang:StudentLife} & $\circ$   & --          & \textbullet & $\circ$     & -- \\
+Course Signals~\cite{Arnold:CourseSignals} & --  & $\circ$     & --          & --          & -- \\
+Black Box (návrh)                 & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+\section{Návrh riešenia Black Box} \label{s:navrh}
+
+Black Box je desktopová aplikácia s~tromi hlavnými funkciami: zhromaždenie
+termínov, predpoveď týždennej záťaže s~varovaním a~spätný pohľad na
+náročné obdobie. Používateľ pridá predmety a~termíny ručne alebo importom
+súboru vo formáte iCalendar~\cite{RFC5545}. Ku každému termínu zadá odhad,
+koľko hodín práce mu zaberie, a~typ termínu (zadanie, test, skúška), podľa
+ktorého aplikácia predvolí dĺžku prípravy.
+
+\subsection{Model týždennej záťaže} \label{s:model}
+
+Pre termín $i$ označme $d_i$ jeho dátum, $h_i$ odhad hodín a~$w_i$ počet dní
+prípravy. Odhad hodín najprv vynásobíme kalibračným koeficientom $\alpha$
+(pozri ďalej) a~rozložíme ho do dní pred termínom tak, aby váha rástla
+s~blížiacim sa termínom, ako to zodpovedá poznatkom
+o~prokrastinácii~\cite{Steel:Procrastination}. Záťaž dňa $t$ je
+\begin{equation}
+L(t) = \alpha \sum_i h_i \, k_i(d_i - t), \qquad
+k_i(x) = \frac{2\,(w_i - x)}{w_i\,(w_i + 1)} \quad \text{pre } x = 0, \ldots, w_i - 1,
+\label{e:denna}
+\end{equation}
+pričom mimo tohto rozsahu je $k_i(x) = 0$. Jadro $k_i$ je lineárne klesajúce
+so vzdialenosťou od termínu a~jeho súčet je 1, takže celkový počet hodín sa
+zachová. Záťaž týždňa $T$ je súčtom dennej záťaže
+$Z(T) = \sum_{t \in T} L(t)$.
+
+Varovanie pred týždňom $T$ aplikácia vydá, ak je splnená aspoň jedna z~dvoch
+podmienok:
+\begin{equation}
+Z(T) > c \qquad \text{alebo} \qquad
+\frac{Z(T)}{\max\!\left(\frac{1}{4}\sum_{j=1}^{4} Z(T-j),\; c/2\right)} > \rho .
+\label{e:varovanie}
+\end{equation}
+Prvá podmienka porovnáva záťaž s~kapacitou $c$, teda počtom hodín týždenne,
+ktoré má študent popri výučbe na samostatnú prácu k~dispozícii; zadáva ju
+sám. Druhá je obdoba pomeru akútnej a~chronickej záťaže~\cite{Gabbett:ACWR}
+a~zachytí prudký nárast oproti predchádzajúcim štyrom týždňom. Dolná hranica
+$c/2$ v~menovateli rieši nestabilitu pomeru na začiatku semestra, na ktorú
+upozorňujú Impellizzeri a~kol.~\cite{Impellizzeri:ACWR}. Počiatočné hodnoty
+$c = 20$~h a~$\rho = 1{,}5$ sú pracovné a~ich nastavenie je jedným z~cieľov
+overenia. Model sa vyhodnocuje denne pre týždne, ktoré začínajú o~7 až 14
+dní neskôr, aby mal študent na úpravu plánu aspoň týždeň.
+
+\paragraph{Kalibrácia odhadov.}
+Po uplynutí termínu sa aplikácia voliteľne opýta, koľko hodín práca
+skutočne trvala ($s_i$). Kalibračný koeficient je medián pomerov
+$s_i / h_i$ za posledných najviac desať termínov; kým ich používateľ
+nemá aspoň päť, platí $\alpha = 1$. Medián sme zvolili namiesto priemeru,
+aby jeden extrémny termín nezmenil predpoveď na celý semester. Kalibrácia
+priamo reaguje na plánovací klam~\cite{Buehler:Planning}: ak študent
+systematicky podceňuje, aplikácia jeho odhady zväčší.
+
+\subsection{Denný záznam a~spätný pohľad}
+
+Raz denne môže používateľ jedným kliknutím zaznamenať, ako sa cíti, na
+stupnici od 1 do 5. Krátky a~opakovaný záznam vychádza z~metódy
+EMA~\cite{Shiffman:EMA}; zámerne obmedzujeme jeho rozsah, aby ho používateľ
+po pár týždňoch neprestal vypĺňať. Raz týždenne sa aplikácia navyše opýta,
+či bol uplynulý týždeň preťažený. Táto odpoveď slúži ako referenčný údaj pri
+overovaní presnosti varovaní (časť~\ref{s:overenie}).
+
+Spätný pohľad zobrazí na spoločnej časovej osi tri vrstvy: termíny,
+vypočítanú záťaž $Z(T)$ a~zaznamenané pocity. Podľa modelu osobnej
+informatiky~\cite{Li:PersonalInformatics} tým aplikácia preberá etapy
+integrácie a~reflexie, ktoré pri samostatných nástrojoch zostávajú na
+používateľovi. Študent vidí, ktoré termíny sa na náročnom týždni podieľali
+najviac, a~môže si nabudúce prácu na nich rozložiť skôr.
+
+\subsection{Architektúra}
+
+Aplikácia vzniká v~nástroji Tauri~\cite{Tauri}, ktorý spája jadro
+v~jazyku Rust s~webovým používateľským rozhraním a~v~porovnaní s~nástrojmi
+založenými na celom prehliadači vytvára výrazne menšie inštalačné balíky.
+Údaje sú uložené v~lokálnej databáze SQLite~\cite{SQLite}, ktorá je
+jedným súborom v~zariadení používateľa. Rozdelenie zodpovedností ukazuje
+obr.~\ref{f:architektura}.
+
+\begin{figure}[tbh]
+\centering
+\begin{tikzpicture}[
+	font=\small,
+	box/.style={draw, rounded corners, align=center, minimum height=8mm, inner sep=4pt},
+	arr/.style={-{Stealth}, thick}
+]
+\node[box] (ics) {Import\\iCalendar};
+\node[box, below=4mm of ics] (man) {Ručné\\zadanie};
+\node[box, below=4mm of man] (mood) {Denný záznam\\pocitov};
+
+\node[box, right=12mm of man, minimum width=30mm] (core) {Jadro (Rust)\\[2pt]\footnotesize model záťaže,\\\footnotesize kalibrácia, varovania};
+\node[box, right=10mm of core] (db) {SQLite};
+\node[box, above=6mm of core, minimum width=30mm] (ui) {Rozhranie (web)\\[2pt]\footnotesize kalendár, časová os};
+
+\draw[arr] (ics) -- (core);
+\draw[arr] (man) -- (core);
+\draw[arr] (mood) -- (core);
+\draw[arr, <->] (core) -- (db);
+\draw[arr, <->] (core) -- (ui);
+
+\node[draw, dashed, rounded corners, inner sep=6pt, fit=(ics)(mood)(core)(db)(ui),
+	label={[font=\footnotesize]below:zariadenie používateľa (bez pripojenia na server)}] {};
+\end{tikzpicture}
+\caption{Architektúra aplikácie Black Box. Všetky údaje zostávajú
+v~zariadení používateľa.}
+\label{f:architektura}
+\end{figure}
+
+Aplikácia nemá žiadnu serverovú časť a~na svoju činnosť nepotrebuje
+internet. Nadväzuje tým na ideály local-first~\cite{Kleppmann:LocalFirst}
+a~zohľadňuje zistenia o~úniku údajov z~aplikácií pre duševné
+zdravie~\cite{Huckvale:Privacy}. Používateľ môže svoje údaje kedykoľvek
+exportovať do otvoreného formátu alebo ich úplne vymazať, čím aplikácia
+napĺňa právo na prenosnosť a~vymazanie údajov podľa
+GDPR~\cite{GDPR}. Synchronizácia medzi viacerými zariadeniami nie je
+v~prvej verzii súčasťou návrhu.
+
+
+
+\section{Plán overenia} \label{s:overenie}
+
+Aby sme vedeli posúdiť, či aplikácia skutočne pomáha, stanovili sme
+merateľné ukazovatele pre každú z~troch funkcií.
+
+\paragraph{Presnosť varovaní.}
+Aplikáciu bude počas ôsmich týždňov semestra používať skupina najmenej
+30 študentov. Za \emph{skutočne preťažený} považujeme týždeň, ktorý študent
+v~týždennej otázke označí ako preťažený alebo ktorého priemerný denný záznam
+je najviac 2. Varovania porovnáme s~týmto referenčným údajom a~vypočítame
+presnosť (podiel oprávnených varovaní) a~úplnosť (podiel zachytených
+preťažených týždňov). Cieľom je presnosť aspoň 70\,\% a~úplnosť aspoň
+60\,\% pri predstihu najmenej 7 dní. Ako východiskový model použijeme
+jednoduché počítanie termínov v~týždni; náš model by ho mal prekonať
+v~ukazovateli F1.
+
+\paragraph{Prínos kalibrácie.}
+Pri termínoch, ku ktorým študenti zadajú skutočný počet hodín, porovnáme
+strednú absolútnu chybu odhadu pred kalibráciou a~po nej. Očakávame, že
+kalibrácia chybu zníži, čo by potvrdilo vplyv plánovacieho
+klamu~\cite{Buehler:Planning} aj v~našom kontexte.
+
+\paragraph{Použiteľnosť.}
+Na konci overenia vyplnia účastníci dotazník SUS~\cite{Brooke:SUS}. Cieľom
+je priemerné skóre aspoň 71, ktoré podľa Bangora a~kol. zodpovedá slovnému
+hodnoteniu použiteľnosti ako dobrej~\cite{Bangor:SUS}. Doplnkovým ukazovateľom je podiel dní,
+v~ktorých študent vyplnil denný záznam; ak klesne pod 50\,\%, denný záznam
+je potrebné zjednodušiť.
+
+\paragraph{Technické požiadavky.}
+Aplikácia musí správne načítať aspoň 95\,\% udalostí z~exportu
+univerzitného informačného systému vo formáte iCalendar a~počas celého
+overenia nesmie odoslať žiadne údaje mimo zariadenia, čo overíme
+sledovaním sieťovej komunikácie.
+
+
+
+\section{Diskusia a~otvorené otázky} \label{s:diskusia}
+
+Návrh má niekoľko obmedzení, ktoré chceme počas projektu preskúmať.
+Prvým je závislosť od odhadov používateľa. Kalibrácia síce koriguje
+systematickú chybu, ale nepomôže, ak študent odhady nezadáva vôbec.
+Zvažujeme preto predvolené odhady podľa typu termínu, ktoré by sa
+postupne prispôsobovali.
+
+Druhým obmedzením je meranie pohody jedným číslom. Je to vedomý kompromis
+medzi presnosťou a~ochotou záznam vypĺňať: validované dotazníky vyhorenia
+ako MBI-SS~\cite{Schaufeli:Burnout} majú 15 položiek a~na denné
+použitie sa nehodia. Zostáva otvorené, či jednopoložkový záznam dostatočne
+zachytí zmeny, ktoré nás zaujímajú.
+
+Tretím je prenositeľnosť prahov. Ako ukazuje kritika ACWR~\cite{Impellizzeri:ACWR},
+prah, ktorý funguje v~jednej skupine, nemusí fungovať v~inej. Je možné, že
+hodnoty $c$ a~$\rho$ sa budú musieť prispôsobovať jednotlivcovi, podobne
+ako kalibračný koeficient $\alpha$.
+
+Napokon, lokálne uloženie údajov vylučuje akékoľvek spoločné
+vyhodnocovanie. Na účely overenia preto účastníci exportujú anonymizovaný
+súhrn ukazovateľov sami a~s~ich výslovným súhlasom.
+
+
+
+\section{Záver} \label{s:zaver}
+
+V~článku sme zhrnuli poznatky o~študijnom preťažení a~o~tom, prečo ho
+študenti sami nepredvídajú. Ukázali sme, že dostupné nástroje riešia vždy
+len časť problému: kalendáre poznajú termíny, ale nie záťaž, aplikácie na
+sledovanie pohody poznajú pocity, ale nie ich príčiny, a~systémy včasného
+varovania vo vzdelávaní sú inštitucionálne a~zamerané na známky.
+
+Naším príspevkom je návrh aplikácie Black Box, ktorá tieto časti spája
+lokálne v~zariadení študenta, a~model výpočtu týždennej záťaže, ktorý
+preberá myšlienku pomeru akútnej a~chronickej záťaže zo športovej vedy
+a~dopĺňa ju o~kalibráciu odhadov. Stanovili sme merateľné ukazovatele, podľa
+ktorých posúdime, či aplikácia svoj cieľ spĺňa.
+
+Otvorené zostáva najmä to, či sa prahy varovania dajú nastaviť všeobecne
+a~či jednoduchý denný záznam stačí na zachytenie preťaženia. Na tieto
+otázky odpovie overenie so skupinou študentov, ktoré je ďalším krokom
+projektu.
+
+
+
+%\acknowledgement{Ak niekomu chcete poďakovať\ldots}
+
+
+% týmto sa generuje zoznam literatúry z obsahu súboru literatura.bib podľa toho, na čo sa v článku odkazujete
+\bibliography{literatura}
+\bibliographystyle{plain} % prípadne alpha, abbrv alebo hociktorý iný
+\end{document}

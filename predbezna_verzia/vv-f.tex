@@ -1,0 +1,434 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[slovak]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{microtype}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{cite}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\hypersetup{
+  pdftitle={Black Box -- VV-F vecný zámer projektu},
+  pdfauthor={Kyryl Tkachenko, Tymofii Trembovetskyi, Alex Vyšný}
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small VV-F -- Vecný zámer projektu}
+\rhead{\small Akronym: BlackBox}
+\cfoot{\small \thepage{} / \pageref{LastPage}}
+
+\begin{document}
+
+\begin{center}
+  {\Large\bfseries VV-F -- VECNÝ ZÁMER PROJEKTU}\\[0.3em]
+  Záväzná osnova pre aplikovaný výskum a~vývoj (maximálny rozsah 15 strán)
+\end{center}
+
+\renewcommand{\arraystretch}{1.3}
+\noindent
+\begin{tabularx}{\linewidth}{|>{\bfseries}p{45mm}|X|}
+\hline
+Názov projektu & Black Box: lokálna aplikácia na včasné varovanie študentov pred študijným preťažením \\ \hline
+Zodpovedný riešiteľ & Tymofii Trembovetskyi \\ \hline
+Žiadateľ & Slovenská technická univerzita v~Bratislave, Fakulta informatiky a~informačných technológií \\ \hline
+Štatutárny zástupca žiadateľa & prof. Dr. Ing. Oliver Moravčík, rektor \\ \hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1}
+
+%=====================================================================
+\section{Excelentnosť}
+
+\subsection{Projektový zámer, spôsob riešenia a~aplikačná úroveň výsledkov}
+
+Študenti dostávajú termíny zadaní, testov a~skúšok z~informačného systému
+školy, e-mailov a~skupinových chatov. Každý zdroj osve vyzerá zvládnuteľne,
+no keď sa termíny z~viacerých predmetov zbehnú do jedného týždňa, študent to
+zistí až niekoľko dní vopred. Opakované obdobia preťaženia sú pritom jednou
+z~ciest k~vyhoreniu~\cite{Maslach:Burnout,Schaufeli:Burnout}.
+
+Projektovým zámerom je navrhnúť a~overiť desktopovú aplikáciu Black Box,
+ktorá:
+\begin{enumerate}[nosep]
+  \item zhromaždí termíny na jednom mieste (ručné zadanie, import vo formáte
+    iCalendar~\cite{RFC5545}),
+  \item z~odhadov časovej náročnosti termínov vypočíta záťaž jednotlivých
+    týždňov a~7 až 14 dní vopred varuje pred týždňom, ktorý bude
+    pravdepodobne preťažený,
+  \item umožní jednoduchý denný záznam pocitov a~po náročnom období zobrazí
+    spoločnú časovú os termínov, záťaže a~pocitov.
+\end{enumerate}
+
+Riešenie stojí na troch pilieroch. Prvým je \emph{model záťaže}, ktorý
+rozkladá odhad hodín do dní pred termínom s~rastúcou váhou a~porovnáva
+týždennú záťaž s~kapacitou študenta aj s~jeho zvyčajnou záťažou. Druhým je
+\emph{kalibrácia odhadov}, ktorá koriguje systematické podceňovanie času.
+Tretím je architektúra \emph{local-first}~\cite{Kleppmann:LocalFirst}:
+aplikácia nemá serverovú časť a~citlivé údaje o~pohode nikdy neopustia
+zariadenie používateľa.
+
+Aplikačnou úrovňou výsledkov je funkčný prototyp overený so študentmi
+počas reálneho semestra (TRL~6), ktorý je možné bez ďalšieho vývoja
+ponúknuť študentom fakulty a~ďalších vysokých škôl.
+
+\subsection{Aktuálnosť cieľov a~originalita}
+
+Duševné zdravie študentov je aktuálna téma: medzinárodný prieskum
+Svetovej zdravotníckej organizácie zistil, že približne tretina študentov
+prvého ročníka mala v~poslednom roku príznaky niektorej z~bežných duševných
+porúch~\cite{Auerbach:WMH}, a~akademický stres patrí medzi ich hlavné
+zdroje~\cite{Pascoe:Stress}. Zároveň rastie počet aplikácií na sledovanie
+pohody, z~ktorých veľká časť odosiela údaje tretím
+stranám~\cite{Huckvale:Privacy}.
+
+Originalita myšlienky spočíva v~prepojení troch oblastí, ktoré sa doteraz
+riešili oddelene: správy termínov, sledovania pohody a~včasného varovania.
+Originalita riešenia spočíva v~prenesení princípu pomeru akútnej
+a~chronickej záťaže zo športovej vedy~\cite{Gabbett:ACWR} do študijného
+prostredia, jeho úprave podľa známej kritiky~\cite{Impellizzeri:ACWR}
+a~doplnení o~kalibráciu odhadov, ktorá reaguje na plánovací
+klam~\cite{Buehler:Planning}. Nepoznáme nástroj, ktorý by tieto prvky
+spájal a~zároveň uchovával všetky údaje lokálne.
+
+\subsection{Stav poznania, vedecké základy a~predchádzajúce výsledky}
+
+Podrobný prehľad stavu poznania prináša sprievodný prehľadový článok;
+tu uvádzame jeho hlavné body.
+
+\paragraph{Záťaž a~jej vnímanie.}
+Vyhorenie študentov je dobre preskúmaný a~merateľný
+jav~\cite{Schaufeli:Burnout}. Vnímaná záťaž nezodpovedá jednoducho počtu
+hodín učenia, ale závisí aj od organizácie výučby a~hodnotenia~\cite{Kember:Workload}.
+Študenti systematicky podceňujú čas potrebný na úlohy~\cite{Buehler:Planning}
+a~sústreďujú úsilie do obdobia tesne pred termínom~\cite{Steel:Procrastination},
+preto sa prekryv termínov prejaví silnejšie, než by naznačoval rovnomerný plán.
+
+\paragraph{Sledovanie pohody.}
+Projekt StudentLife ukázal, že stres študentov rastie a~spánok aj aktivita
+klesajú v~obdobiach so zvýšeným počtom termínov~\cite{Wang:StudentLife}.
+Metóda ekologického momentového hodnotenia (EMA) poskytuje spoľahlivejší
+obraz pohody ako spätné dotazníky~\cite{Shiffman:EMA}. Model osobnej
+informatiky upozorňuje, že používatelia zlyhávajú najmä pri spájaní údajov
+z~rôznych zdrojov a~pri reflexii~\cite{Li:PersonalInformatics}.
+
+\paragraph{Včasné varovanie.}
+Systémy učiacej sa analytiky, napríklad Course
+Signals~\cite{Arnold:CourseSignals}, varujú pred neúspechom v~predmete, sú
+však inštitucionálne a~nesledujú záťaž naprieč predmetmi. V~športovej vede sa
+riziko preťaženia hodnotí pomerom akútnej a~chronickej
+záťaže~\cite{Gabbett:ACWR}; jeho prahy však nie sú prenosné bez overenia
+v~konkrétnom kontexte~\cite{Impellizzeri:ACWR}.
+
+\paragraph{Súkromie.}
+Údaje o~pohode môžu byť údajmi o~zdraví, ktoré GDPR radí medzi osobitné
+kategórie~\cite{GDPR,Zakon18}. Prístup local-first umožňuje poskytnúť plnú
+funkčnosť bez toho, aby údaje opustili zariadenie~\cite{Kleppmann:LocalFirst}.
+
+\paragraph{Predchádzajúce výsledky riešiteľov.}
+Riešitelia vypracovali projektový zámer, prehľadový článok a~prvý návrh
+modelu záťaže, ktorý je opísaný v~časti~\ref{s:metodologia}.
+
+\subsection{Ciele projektu a~reálnosť ich dosiahnutia}
+
+\textbf{Hlavný cieľ:} navrhnúť, implementovať a~overiť lokálnu aplikáciu,
+ktorá študentovi vopred ukáže preťažené týždne semestra a~po ich uplynutí
+pomôže pochopiť ich príčiny.
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}lXX@{}}
+\toprule
+& \textbf{Čiastkový cieľ} & \textbf{Merateľný ukazovateľ} \\
+\midrule
+C1 & Model týždennej záťaže a~pravidlo varovania
+   & presnosť varovaní $\geq 70\,\%$, úplnosť $\geq 60\,\%$ pri predstihu
+     $\geq 7$ dní; vyššie F1 ako východiskový model \\
+C2 & Kalibrácia odhadov časovej náročnosti
+   & pokles strednej absolútnej chyby odhadu po kalibrácii \\
+C3 & Prototyp aplikácie pre Windows, Linux a~macOS
+   & $\geq 95\,\%$ správne načítaných udalostí iCalendar; žiadna
+     odchádzajúca komunikácia s~osobnými údajmi \\
+C4 & Overenie so študentmi počas semestra
+   & $\geq 30$ účastníkov, 8 týždňov; skóre SUS $\geq 71$~\cite{Bangor:SUS};
+     denný záznam v~$\geq 50\,\%$ dní \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Reálnosť dosiahnutia.} Ciele C1 a~C2 sa opierajú o~jednoduché
+a~dobre interpretovateľné výpočty, ktoré je možné overiť najprv na
+simulovaných rozvrhoch. Cieľ C3 využíva zrelé technológie (Tauri~\cite{Tauri},
+SQLite~\cite{SQLite}) a~štandardizovaný formát iCalendar, ktorý exportuje
+aj akademický informačný systém STU. Pre cieľ C4 je k~dispozícii veľká
+skupina potenciálnych účastníkov na vlastnej fakulte. Hodnoty ukazovateľov
+v~C1 sú zámerne stanovené ako dosiahnuteľné minimum; ak ich model nedosiahne,
+bude to samo osebe dôležitým zistením o~predvídateľnosti preťaženia.
+
+\subsection{Metodológia riešenia} \label{s:metodologia}
+
+\paragraph{Model záťaže (C1).}
+Pre termín $i$ s~dátumom $d_i$, odhadom hodín $h_i$ a~dĺžkou prípravy
+$w_i$ dní je záťaž dňa $t$
+\begin{equation*}
+L(t) = \alpha \sum_i h_i \, k_i(d_i - t), \qquad
+k_i(x) = \frac{2\,(w_i - x)}{w_i\,(w_i + 1)}, \quad x = 0, \ldots, w_i - 1,
+\end{equation*}
+a~záťaž týždňa $T$ je $Z(T) = \sum_{t \in T} L(t)$. Lineárne jadro
+$k_i$ dáva väčšiu váhu dňom tesne pred termínom, čo zodpovedá poznatkom
+o~prokrastinácii~\cite{Steel:Procrastination}. Varovanie sa vydá, ak
+$Z(T) > c$ (kapacita študenta) alebo ak pomer $Z(T)$ k~priemeru štyroch
+predchádzajúcich týždňov (s~dolnou hranicou $c/2$) prekročí $\rho$.
+Počiatočné hodnoty $c = 20$~h a~$\rho = 1{,}5$ budú v~etape E1 nastavené
+na simulovaných rozvrhoch a~v~etape E3 overené na reálnych údajoch.
+Výber jednoduchého interpretovateľného modelu namiesto strojového učenia
+je zámerný: aplikácia musí vedieť študentovi vysvetliť, prečo varuje,
+a~pri lokálnom spracovaní nemá k~dispozícii údaje iných používateľov.
+
+\paragraph{Kalibrácia (C2).}
+Po termíne aplikácia voliteľne zistí skutočný počet hodín $s_i$.
+Koeficient $\alpha$ je medián pomerov $s_i / h_i$ za posledných najviac
+desať termínov (pri menej ako piatich termínoch $\alpha = 1$).
+
+\paragraph{Vývoj (C3).}
+Aplikácia sa vyvíja iteratívne v~dvojtýždňových iteráciách. Jadro
+v~jazyku Rust obsahuje model, kalibráciu a~prístup k~databáze a~je pokryté
+jednotkovými testami; import iCalendar sa testuje na anonymizovaných
+exportoch z~informačného systému. Používateľské rozhranie sa overuje
+priebežne s~piatimi až siedmimi študentmi metódou myslenia nahlas.
+
+\paragraph{Overenie (C4).}
+Pilotné overenie prebehne počas letného semestra 2028 s~najmenej 30
+dobrovoľníkmi z~rôznych ročníkov a~študijných programov. Účastníci
+podpíšu informovaný súhlas. Raz týždenne odpovedajú na otázku, či bol
+uplynulý týždeň preťažený; týždeň sa za preťažený považuje aj vtedy, ak je
+priemer denného záznamu najviac 2. Na konci overenia účastník sám
+exportuje anonymizovaný súhrn ukazovateľov (bez názvov predmetov
+a~termínov), ktorý odovzdá riešiteľom. Vyhodnotí sa presnosť, úplnosť
+a~F1 varovaní oproti východiskovému modelu (počet termínov v~týždni),
+pokles chyby odhadu po kalibrácii (párový Wilcoxonov test) a~skóre
+SUS~\cite{Brooke:SUS}.
+
+\subsection{Najdôležitejšie výstupy zodpovedného riešiteľa za posledných 5~rokov}
+
+Zodpovedný riešiteľ je študentom bakalárskeho štúdia na FIIT STU
+a~doteraz nemá publikované výstupy aplikovaného výskumu. Prvým výstupom
+v~tejto oblasti je prehľadový článok, ktorý je súčasťou tohto návrhu.
+
+\subsection{Najdôležitejšie projekty zodpovedného riešiteľa za posledných 5~rokov}
+
+Zodpovedný riešiteľ doteraz neriešil projekt financovaný z~grantovej schémy.
+
+\subsection{Úroveň kvality zodpovedného riešiteľa, jeho vízia a~kariérny rast}
+
+Zodpovedný riešiteľ študuje informatiku a~tému pozná aj z~vlastnej
+skúsenosti študenta. Projekt pre neho predstavuje prvú samostatnú
+výskumnú prácu, v~ktorej si osvojí celý cyklus aplikovaného výskumu: od
+prehľadu literatúry cez návrh a~implementáciu po overenie s~používateľmi.
+Víziou je pokračovať v~téme v~bakalárskej a~diplomovej práci, rozšíriť
+model o~prispôsobovanie prahov jednotlivcovi a~zapojiť do vývoja ďalších
+študentov ako prispievateľov do otvoreného zdrojového kódu.
+
+\subsection{Kompetentnosť riešiteľskej organizácie}
+
+Fakulta informatiky a~informačných technológií STU sa dlhodobo venuje
+softvérovému inžinierstvu, interakcii človeka s~počítačom a~analýze
+údajov o~učení. Fakulta má skúsenosti s~vedením študentských výskumných
+projektov a~poskytuje prostredie, v~ktorom je možné pilotné overenie
+uskutočniť priamo medzi jej študentmi.
+
+\subsection{Expertíza riešiteľov}
+
+Kyryl Tkachenko bude zodpovedný za používateľské rozhranie, návrh
+denného záznamu a~časovej osi. Alex Vyšný bude zodpovedný za organizáciu
+pilotného overenia, nábor účastníkov a~štatistické vyhodnotenie údajov.
+Zodpovedný riešiteľ bude zodpovedný za jadro aplikácie, model záťaže
+a~kalibráciu. Všetci riešitelia sa podieľajú na vyhodnotení a~publikovaní
+výsledkov.
+
+\subsection{Zapojenie mladých pracovníkov}
+
+Všetci traja riešitelia sú mladí pracovníci do 35 rokov, zapojenie mladých
+pracovníkov je teda 100\,\% kapacity projektu. Projekt je pre nich
+príležitosťou získať skúsenosti s~výskumom, ktoré môžu zúročiť
+v~ďalšom štúdiu.
+
+%=====================================================================
+\section{Dopad}
+
+\subsection{Prínosy pre rozvoj poznania, aplikovaného výskumu a~inovácií}
+
+\begin{itemize}[nosep]
+  \item \textbf{Nová služba:} aplikácia, ktorá študentovi vopred ukáže
+    preťažené týždne, čo dnes žiadny bežne dostupný nástroj neumožňuje.
+  \item \textbf{Nový postup:} model záťaže s~kalibráciou, prenesený zo
+    športovej vedy a~upravený pre študijné prostredie, spolu s~metodikou
+    overenia jeho presnosti.
+  \item \textbf{Poznatky:} empirické údaje o~tom, nakoľko je študijné
+    preťaženie predvídateľné z~termínov a~odhadov a~ako veľmi študenti
+    podceňujú časovú náročnosť úloh.
+  \item \textbf{Spoločenská inovácia:} ukážka, že nástroj pracujúci
+    s~citlivými údajmi o~pohode môže byť užitočný bez toho, aby údaje
+    opustili zariadenie.
+\end{itemize}
+
+\subsection{Využiteľnosť výsledkov v~SR a~v~zahraničí}
+
+Aplikácia bude zverejnená pod otvorenou licenciou a~bude ju môcť bezplatne
+používať ktorýkoľvek študent. Žiadateľ ju môže ponúknuť študentom prvého
+ročníka v~rámci adaptačných aktivít; zistenia o~rozložení záťaže môžu
+garanti predmetov využiť pri plánovaní termínov. Keďže formát iCalendar
+je medzinárodný štandard, aplikácia je použiteľná aj na iných
+univerzitách v~SR a~v~zahraničí. Rozhranie bude dostupné v~slovenčine
+a~angličtine.
+
+\subsection{Ekonomický a~spoločenský prínos}
+
+Hlavný prínos je v~oblasti kvality života a~zdravia: včasné varovanie
+umožňuje rozložiť prácu skôr, než vznikne stres, a~znižuje tak riziko
+dlhodobého preťaženia a~vyhorenia~\cite{Maslach:Burnout}. Akademický
+stres súvisí s~horším študijným výkonom a~predčasným ukončovaním
+štúdia~\cite{Pascoe:Stress}; každý študent, ktorý štúdium vďaka lepšiemu
+plánovaniu dokončí, predstavuje úsporu verejných prostriedkov vynaložených
+na jeho vzdelávanie. Projekt zároveň skvalitňuje ľudské zdroje: riešitelia
+získajú skúsenosti s~aplikovaným výskumom.
+
+\subsection{Opatrenia na maximalizáciu výsledkov a~komunikácia}
+
+\begin{itemize}[nosep]
+  \item zverejnenie zdrojového kódu a~inštalačných balíkov vo verejnom
+    repozitári s~dokumentáciou,
+  \item webová stránka projektu s~návodom a~priebežnými výsledkami,
+  \item príspevok na vedeckej konferencii a~prehľadový článok,
+  \item workshop pre študentov o~plánovaní záťaže s~ukážkou aplikácie,
+  \item prezentácia výsledkov vedeniu fakulty a~študijnej rade.
+\end{itemize}
+
+%=====================================================================
+\section{Implementácia}
+
+\subsection{Projektový plán a~výstupy}
+
+Projekt trvá 24 mesiacov (01/2027 -- 12/2028) a~je rozdelený do štyroch
+pracovných balíkov (tab.~\ref{t:balicky}, obr.~\ref{f:gantt}).
+
+\begin{table}[htb]
+\centering
+\small
+\caption{Pracovné balíky, výstupy a~míľniky.}
+\label{t:balicky}
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{40mm}X@{}}
+\toprule
+& \textbf{Pracovný balík} & \textbf{Hlavné úlohy a~výstupy} \\
+\midrule
+E1 & Analýza a~model záťaže (M1--M6)
+   & analýza exportov z~informačného systému, návrh modelu a~kalibrácie,
+     simulátor; \emph{výstup:} technická správa, simulátor;
+     \emph{míľnik M1 (M6):} model overený na simulovaných rozvrhoch \\
+E2 & Vývoj prototypu (M4--M13)
+   & jadro v~Ruste, databáza, import iCalendar, rozhranie, varovania,
+     denný záznam, časová os; \emph{výstupy:} verzia 0.1 (M9), verzia 1.0
+     (M13); \emph{míľniky M2 (M9), M3 (M13)} \\
+E3 & Pilotné overenie (M14--M19)
+   & nábor účastníkov, informovaný súhlas, 8-týždňové používanie,
+     zber súhrnov; \emph{výstup:} správa o~overení;
+     \emph{míľnik M4 (M19):} ukončený zber údajov \\
+E4 & Vyhodnotenie a~šírenie (M18--M24)
+   & analýza údajov, úprava modelu, verzia 2.0, publikácia, workshop;
+     \emph{míľnik M5 (M24):} záverečná správa \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[x=6mm, y=6mm, font=\small]
+  \foreach \m in {1,...,24} \node[font=\scriptsize] at (\m-0.5, 0.6) {\m};
+  \draw[gray!40] (0,0) -- (24,0);
+  \foreach \row/\a/\b/\n in {1/0/6/E1, 2/3/13/E2, 3/13/19/E3, 4/17/24/E4} {
+    \node[anchor=east] at (-0.2,-\row+0.5) {\n};
+    \fill[black!25] (\a,-\row+0.15) rectangle (\b,-\row+0.85);
+  }
+  \foreach \x/\l in {6/M1, 9/M2, 13/M3, 19/M4, 24/M5} {
+    \draw[dashed, gray] (\x,0) -- (\x,-4.2);
+    \node[font=\scriptsize, below] at (\x,-4.2) {\l};
+  }
+\end{tikzpicture}
+\caption{Harmonogram pracovných balíkov (mesiace projektu) a~míľniky.}
+\label{f:gantt}
+\end{figure}
+
+\subsection{Projektový manažment}
+
+Projekt riadi zodpovedný riešiteľ. Riešitelia sa stretávajú raz týždenne;
+na konci každej dvojtýždňovej iterácie vyhodnotia splnené úlohy
+a~naplánujú ďalšie. Úlohy, zdrojový kód a~dokumentácia sú vedené
+v~systéme na správu verzií s~evidenciou úloh. Na konci každej etapy
+riešitelia porovnajú stav s~míľnikmi a~ukazovateľmi z~časti~1.4 a~v~prípade
+odchýlky upravia plán ďalšej etapy.
+
+\subsection{Riziká implementácie a~ich zmiernenie}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{45mm}cX@{}}
+\toprule
+\textbf{Riziko} & \textbf{Pravdep.} & \textbf{Zmiernenie} \\
+\midrule
+Nedostatok účastníkov overenia & stredná
+  & nábor vo viacerých ročníkoch, odmena vo forme poukážky, rezerva 10
+    účastníkov nad minimum \\
+Účastníci prestanú zapisovať údaje & vysoká
+  & záznam jedným kliknutím, pripomienka, sledovanie podielu vyplnených dní
+    už počas overenia \\
+Model nedosiahne cieľovú presnosť & stredná
+  & nastavenie prahov na simulovaných údajoch v~E1, prispôsobenie prahov
+    jednotlivcovi v~E4; negatívny výsledok sa zverejní \\
+Export informačného systému nie je kompatibilný & nízka
+  & testy na reálnych exportoch v~E1, ručné zadanie ako záložná možnosť \\
+Únik citlivých údajov & nízka
+  & žiadna serverová časť, overenie sieťovej komunikácie, anonymizovaný
+    súhrn exportuje sám účastník \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Adekvátnosť rozpočtu}
+
+Celkový rozpočet je 63\,274~EUR (formulár VV-C). Najväčšiu časť tvoria
+osobné náklady troch riešiteľov (2\,400 hodín za projekt), ktoré
+zodpovedajú rozsahu vývoja a~overenia. Materiál zahŕňa dva testovacie
+notebooky, bez ktorých nie je možné zostaviť a~otestovať aplikáciu pre
+macOS a~Windows. Služby pokrývajú certifikáty na podpisovanie kódu,
+odmeny účastníkom overenia a~konferenčný poplatok. Projekt nepožaduje
+nákup prístrojov ani licencií, keďže všetky použité technológie sú
+otvorené.
+
+\subsection{Existujúca infraštruktúra pracoviska}
+
+FIIT STU poskytuje pracovné priestory, počítačové učebne, prístup
+k~sieti a~výpočtovým prostriedkom a~licencie na bežný softvér.
+Riešitelia majú k~dispozícii vlastné počítače s~operačným systémom
+Linux, na ktorých prebieha vývoj. Pilotné overenie nevyžaduje žiadnu
+ďalšiu infraštruktúru, pretože aplikácia beží výlučne na zariadeniach
+účastníkov.
+
+%=====================================================================
+\bibliographystyle{plain}
+\bibliography{literatura}
+
+\end{document}

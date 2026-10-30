@@ -1,0 +1,348 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[slovak]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{microtype}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage[hidelinks]{hyperref}
+
+\hypersetup{
+  pdftitle={Black Box -- formuláre VV-A až VV-E},
+  pdfauthor={Kyryl Tkachenko, Tymofii Trembovetskyi, Alex Vyšný}
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+\renewcommand{\arraystretch}{1.3}
+
+% údaje, ktoré treba doplniť ručne
+\newcommand{\dopln}[1]{\textcolor{red}{[#1]}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small VV 2026 \quad Aplikovaný výskum}
+\rhead{\small Akronym: BlackBox}
+\cfoot{\small Strana \thepage{} z~\pageref{LastPage}}
+
+% hlavička časti formulára
+\newcommand{\cast}[2]{%
+  \par\medskip
+  \noindent\colorbox{black!10}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+    \textbf{#1}\hfill\textbf{#2}}}\par\smallskip}
+
+% riadok formulára: kód položky | názov | obsah
+\newenvironment{polozky}
+  {\noindent\tabularx{\linewidth}{|>{\centering\arraybackslash}p{7mm}|>{\raggedright\arraybackslash}p{45mm}|X|}\hline}
+  {\endtabularx\par}
+\newcommand{\pol}[3]{#1 & #2 & #3 \\ \hline}
+
+\begin{document}
+
+\begin{center}
+  {\Large\bfseries Žiadosť o~poskytnutie prostriedkov na aplikovaný výskum}\\[0.4em]
+  {\large Formuláre VV-A až VV-E}\\[0.4em]
+  Black Box: lokálna aplikácia na včasné varovanie študentov pred študijným preťažením\\[0.3em]
+  {\small Kyryl Tkachenko, Tymofii Trembovetskyi, Alex Vyšný \quad\textbar\quad
+  Metódy inžinierskej práce, FIIT STU \quad\textbar\quad 30. október 2026}
+\end{center}
+
+%=====================================================================
+\cast{VV-A1}{Základné informácie o~projekte}
+
+\begin{polozky}
+\pol{01}{Evidenčné číslo projektu}{APVV-26-xxxx (pridelí agentúra)}
+\pol{02}{Dátum podania}{30.~10.~2026}
+\pol{03}{Názov projektu}{Black Box: lokálna aplikácia na včasné varovanie študentov pred študijným preťažením}
+\pol{03}{Názov projektu v~angličtine}{Black Box: A~Local Application for Early Warning of Students Against Study Overload}
+\pol{04}{Akronym projektu}{BlackBox}
+\pol{05}{Odbor vedy a~techniky}{Technické vedy -- informatika (softvérové inžinierstvo, interakcia človeka s~počítačom)}
+\pol{06}{Charakter výskumu}{aplikovaný výskum}
+\pol{07}{Začiatok riešenia projektu}{01.~01.~2027}
+\pol{08}{Koniec riešenia projektu}{31.~12.~2028}
+\pol{10}{Žiadateľská organizácia}{Slovenská technická univerzita v~Bratislave, Fakulta informatiky a~informačných technológií}
+\pol{11}{Požadované finančné prostriedky z~APVV (v~EUR)}{63\,274}
+\pol{12}{Spolufinancovanie projektu (v~EUR)}{0}
+\pol{13}{Celkové náklady na projekt (v~EUR)}{63\,274}
+\end{polozky}
+
+\textbf{VV-A1-09 \quad Anotácia} (max. 2\,000 znakov)
+
+Vysokoškolskí študenti dostávajú termíny zadaní, testov a~skúšok z~viacerých
+zdrojov -- z~informačného systému školy, z~e-mailov aj zo skupinových chatov.
+Chýba im jeden prehľad, ktorý by včas ukázal, že sa v~niektorom týždni
+nahromadí priveľa povinností. Bežné kalendáre termíny iba zobrazujú
+a~aplikácie zamerané na duševnú pohodu zasa nepoznajú študijné povinnosti.
+Dôsledkom je preťaženie, stres a~v~dlhodobom horizonte riziko vyhorenia.
+
+Cieľom projektu je navrhnúť a~overiť desktopovú aplikáciu Black Box, ktorá
+funguje ako „čierna skrinka“ študenta. Aplikácia zhromaždí termíny na jednom
+mieste, a~to ručným zadaním alebo importom kalendára vo formáte iCalendar.
+Ku každému termínu používateľ odhadne, koľko hodín mu zaberie. Z~týchto
+odhadov, kalibrovaných podľa skutočnej náročnosti minulých termínov,
+a~z~blízkosti termínov aplikácia vypočíta záťaž jednotlivých týždňov
+a~7 až 14 dní vopred upozorní na týždeň, ktorý bude pravdepodobne preťažený.
+Raz denne môže používateľ zaznamenať, ako sa cíti, na stupnici od 1 do 5.
+Po náročnom období aplikácia zobrazí časovú os termínov, vypočítanej záťaže
+a~zaznamenaných pocitov, z~ktorej je zrejmé, čo preťaženie spôsobilo.
+
+Projekt sa zameriava najmä na: (1) návrh modelu výpočtu týždennej záťaže
+a~prahu pre varovanie, (2) implementáciu aplikácie v~nástroji Tauri
+s~jadrom v~jazyku Rust a~s~lokálnou databázou SQLite, (3) overenie so
+skupinou najmenej 30 študentov počas semestra, či varovania zodpovedajú
+skutočne náročným týždňom.
+
+Aplikácia je navrhnutá podľa princípu local-first: funguje bez internetu
+a~bez servera a~všetky údaje vrátane citlivých údajov o~pohode zostávajú
+v~zariadení používateľa v~súlade s~nariadením GDPR. Výsledkom projektu bude
+funkčný prototyp s~otvoreným zdrojovým kódom a~vyhodnotenie presnosti
+varovaní.
+
+%=====================================================================
+\cast{VV-A2}{Základné informácie o~riešiteľských organizáciách}
+
+\textbf{Žiadateľ}
+
+\begin{polozky}
+\pol{01}{Názov organizácie}{Slovenská technická univerzita v~Bratislave}
+\pol{02}{Skrátený názov}{STU}
+\pol{03}{Adresa organizácie}{Vazovova 5, 812~43 Bratislava; pracovisko: Fakulta informatiky a~informačných technológií STU, Ilkovičova 2, 842~16 Bratislava}
+\pol{04}{IČO}{00397687}
+\pol{05}{Príslušnosť k~rezortu}{Ministerstvo školstva, výskumu, vývoja a~mládeže SR}
+\pol{06}{Forma hospodárenia}{verejná vysoká škola}
+\pol{07}{Kontaktná osoba}{Tymofii Trembovetskyi, \texttt{xtrembovetskyi@stuba.sk}, tel.~\dopln{doplniť}}
+\pol{08}{Štatutárny zástupca I}{prof. Dr. Ing. Oliver Moravčík, rektor}
+\pol{09}{Štatutárny zástupca II}{--}
+\end{polozky}
+
+\textbf{Spoluriešiteľská organizácia}
+
+Projekt nemá spoluriešiteľskú organizáciu.
+
+%=====================================================================
+\cast{VV-A3}{Zoznam riešiteľov}
+
+\textbf{01 \quad Zoznam zamestnancov priamo sa podieľajúcich na riešení projektu}
+
+\noindent
+\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}p{40mm}|c|X|c|c|c|>{\raggedright\arraybackslash}p{22mm}|}
+\hline
+\textbf{Meno a~priezvisko} & \textbf{Tituly} & \textbf{Pracovné zaradenie} & \textbf{Dátum nar.} & \textbf{IČO org.} & \textbf{Hodín} & \textbf{Hodín v~rokoch} \\ \hline
+Tymofii Trembovetskyi (zodpovedný riešiteľ) & -- & študent, riešiteľ & \dopln{doplniť} & 00397687 & 800 & 2027: 400; 2028: 400 \\ \hline
+Kyryl Tkachenko & -- & študent, riešiteľ & \dopln{doplniť} & 00397687 & 800 & 2027: 400; 2028: 400 \\ \hline
+Alex Vyšný & -- & študent, riešiteľ & \dopln{doplniť} & 00397687 & 800 & 2027: 400; 2028: 400 \\ \hline
+\end{tabularx}
+
+\begin{polozky}
+\pol{02}{Ostatní zamestnanci}{celkový počet ostatných osôb: 0; súhrnná kapacita: 0 hodín}
+\pol{03}{Spolu}{celkový počet zamestnancov: 3; súhrnná kapacita: 2\,400 hodín}
+\end{polozky}
+
+%=====================================================================
+\cast{VV-A4}{Základné informácie o~zodpovednom riešiteľovi}
+
+\begin{polozky}
+\pol{01}{Meno a~priezvisko}{Tymofii Trembovetskyi}
+\pol{02}{Pohlavie}{\dopln{doplniť}}
+\pol{03}{Telefón}{\dopln{doplniť}}
+\pol{04}{E-mail}{\texttt{xtrembovetskyi@stuba.sk}}
+\pol{05}{Zodpovedný riešiteľ je mladým vedeckým pracovníkom}{áno}
+\pol{06}{Vedecké databázy (typ, ID výskumníka)}{zatiaľ bez záznamu (ORCID bude založený na začiatku riešenia projektu)}
+\pol{07}{Projekty zodpovedného riešiteľa za posledných 5~rokov}{Počet: 0. Zodpovedný riešiteľ je študentom a~doteraz neriešil projekt financovaný z~grantovej schémy.}
+\pol{08}{Expertízy, konzultácie a~ostatné výsledky s~priamym využitím v~praxi za posledných 5~rokov}{Počet: 0.}
+\pol{09}{Aplikačné výstupy -- chránené}{Počet: 0.}
+\end{polozky}
+
+\textbf{Čestné vyhlásenie zodpovedného riešiteľa}
+
+Ja, dolu podpísaný Tymofii Trembovetskyi, čestne vyhlasujem, že údaje
+uvedené v~častiach „Základné informácie o~zodpovednom riešiteľovi“
+a~v~štruktúrovanom profesijnom životopise sú pravdivé.
+
+Ja, dolu podpísaný Tymofii Trembovetskyi, čestne vyhlasujem, že v~rámci
+riešenia projektu budú zo strany žiadateľa rešpektované všetky zásady
+etických princípov vyplývajúce z~európskej a~národnej legislatívy.
+
+\medskip
+\begin{tabularx}{\linewidth}{XXX}
+Miesto: Bratislava & Dátum: 30.~10.~2026 & \rule{45mm}{0.4pt}\newline Podpis zodpovedného riešiteľa
+\end{tabularx}
+
+%=====================================================================
+\cast{VV-B}{Ciele, zámery a~výstupy projektu}
+
+\begin{polozky}
+\pol{01}{Kľúčové slová}{študijná záťaž; včasné varovanie; vyhorenie študentov; osobná informatika; local-first; ochrana súkromia}
+\end{polozky}
+
+\textbf{02 \quad Ciele projektu}
+
+Hlavným cieľom projektu je navrhnúť, implementovať a~overiť lokálnu
+aplikáciu, ktorá študentovi vopred ukáže preťažené týždne semestra
+a~po ich uplynutí pomôže pochopiť ich príčiny. Hlavný cieľ napĺňajú
+štyri čiastkové ciele s~merateľnými ukazovateľmi:
+
+\begin{enumerate}[label=C\arabic*,leftmargin=*,nosep]
+  \item \textbf{Model záťaže.} Navrhnúť model výpočtu týždennej záťaže
+    z~odhadov hodín a~dátumov termínov s~kalibráciou odhadov a~pravidlom
+    pre varovanie. \emph{Ukazovateľ:} presnosť varovaní aspoň 70\,\%
+    a~úplnosť aspoň 60\,\% pri predstihu najmenej 7 dní; model prekoná
+    východiskový model (počet termínov v~týždni) v~ukazovateli F1.
+  \item \textbf{Kalibrácia odhadov.} Overiť, že kalibrácia podľa
+    skutočnej náročnosti minulých termínov znižuje chybu odhadu.
+    \emph{Ukazovateľ:} pokles strednej absolútnej chyby odhadu hodín
+    po kalibrácii oproti nekalibrovaným odhadom.
+  \item \textbf{Prototyp aplikácie.} Implementovať desktopovú aplikáciu
+    pre Windows, Linux a~macOS, ktorá funguje bez pripojenia
+    k~internetu. \emph{Ukazovatele:} správne načítanie aspoň 95\,\%
+    udalostí z~exportu informačného systému vo formáte iCalendar;
+    nulová odchádzajúca sieťová komunikácia s~osobnými údajmi.
+  \item \textbf{Overenie v~praxi.} Overiť aplikáciu s~najmenej 30 študentmi
+    počas 8 týždňov semestra. \emph{Ukazovatele:} priemerné skóre
+    použiteľnosti SUS aspoň 71; denný záznam vyplnený aspoň v~50\,\%
+    dní.
+\end{enumerate}
+
+\begin{polozky}
+\pol{03}{Zaradenie projektu do TRL stupnice}{TRL 2 $\rightarrow$ TRL 6}
+\pol{03}{Zdôvodnenie zaradenia projektu do TRL stupnice}{Na začiatku projektu je sformulovaný koncept aplikácie a~jej využitia (TRL~2). Projekt prejde overením modelu na simulovaných rozvrhoch (TRL~3--4), vývojom prototypu (TRL~5) až po overenie funkčného prototypu so študentmi počas reálneho semestra, teda v~relevantnom prostredí (TRL~6).}
+\pol{03}{Zaradenie výstupov projektu do TRL stupnice}{Model záťaže a~pravidlo varovania: TRL~4 (overené na simulovaných a~historických údajoch). Aplikácia Black Box: TRL~6 (prototyp overený v~relevantnom prostredí -- u~študentov počas semestra). Metodika overovania presnosti varovaní: TRL~6.}
+\pol{04}{Odberateľ výsledkov je žiadateľ}{áno -- FIIT STU môže aplikáciu ponúknuť svojim študentom, napríklad v~rámci adaptácie študentov prvého ročníka, a~využiť zistenia o~rozložení záťaže pri plánovaní termínov v~predmetoch.}
+\pol{04}{Odberateľ výsledkov je iný odberateľ}{nie (aplikácia bude dostupná s~otvoreným zdrojovým kódom aj pre študentov iných vysokých škôl)}
+\pol{04}{Iný odberateľ (názov organizácie)}{--}
+\end{polozky}
+
+\textbf{05 \quad Prehľad plánovaných verejne dostupných výstupov a~prínosov podľa etáp}
+
+\noindent
+\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}p{38mm}|X|}
+\hline
+\textbf{Etapa} & \textbf{Výstupy a~prínosy} \\ \hline
+E1 Analýza a~model záťaže (01/2027--06/2027) & Technická správa s~opisom modelu záťaže, kalibrácie a~pravidla varovania; simulátor modelu s~otvoreným kódom. \\ \hline
+E2 Vývoj prototypu (04/2027--01/2028) & Prototyp Black Box 0.1 (import iCalendar, ručné zadanie, výpočet záťaže) a~verzia 1.0 (varovania, denný záznam, časová os, export a~vymazanie údajov); zdrojový kód pod otvorenou licenciou. \\ \hline
+E3 Pilotné overenie (02/2028--07/2028) & Protokol overenia, anonymizovaný súhrnný dataset ukazovateľov, správa o~presnosti varovaní a~použiteľnosti. \\ \hline
+E4 Vyhodnotenie a~šírenie (06/2028--12/2028) & Upravená verzia 2.0 podľa výsledkov overenia; príspevok na vedeckej konferencii; workshop pre študentov; záverečná správa. \\ \hline
+\end{tabularx}
+
+%=====================================================================
+\cast{VV-C}{Rozpočet projektu v~EUR}
+
+Žiadateľ: Slovenská technická univerzita v~Bratislave
+
+\noindent
+\begin{tabularx}{\linewidth}{|c|X|r|r|r|}
+\hline
+ & \textbf{Položka} & \textbf{2027} & \textbf{2028} & \textbf{Celkovo} \\ \hline
+01 & Bežné priame náklady & 26\,014 & 26\,714 & 52\,728 \\ \hline
+02 & \quad Mzdové náklady a~ostatné osobné náklady & 16\,800 & 16\,800 & 33\,600 \\ \hline
+03 & \quad Zdravotné a~sociálne poistenie & 5\,914 & 5\,914 & 11\,828 \\ \hline
+04 & \quad Cestovné náklady & 300 & 1\,200 & 1\,500 \\ \hline
+05 & \quad Materiál & 2\,400 & 200 & 2\,600 \\ \hline
+06 & \quad Služby & 400 & 2\,000 & 2\,400 \\ \hline
+07 & \quad Energie, vodné, stočné, komunikácie & 0 & 0 & 0 \\ \hline
+08 & \quad Náklady na popularizáciu & 200 & 600 & 800 \\ \hline
+09 & Bežné nepriame náklady (20\,\% z~priamych) & 5\,203 & 5\,343 & 10\,546 \\ \hline
+10 & Bežné náklady spolu & 31\,217 & 32\,057 & 63\,274 \\ \hline
+   & \textbf{Celkové náklady z~APVV} & \textbf{31\,217} & \textbf{32\,057} & \textbf{63\,274} \\ \hline
+   & Spolufinancovanie (štátne, zahraničné, súkromné) & 0 & 0 & 0 \\ \hline
+   & \textbf{Celkové náklady} & \textbf{31\,217} & \textbf{32\,057} & \textbf{63\,274} \\ \hline
+\end{tabularx}
+
+\textbf{Rozpis predpokladaných nákladov uplatňovaných z~APVV}
+
+\begin{description}[leftmargin=0pt,itemsep=2pt]
+  \item[02 Mzdové náklady.] Traja riešitelia, každý 400 hodín ročne pri
+    hodinovej sadzbe 14~EUR: $3 \times 400 \times 14 = 16\,800$~EUR ročne.
+  \item[03 Poistenie.] Odvody zamestnávateľa vo výške 35,2\,\% z~mzdových
+    nákladov.
+  \item[04 Cestovné náklady.] 2027: účasť na odbornom podujatí v~SR
+    (300~EUR). 2028: aktívna účasť na zahraničnej konferencii
+    s~prezentáciou výsledkov (1\,200~EUR).
+  \item[05 Materiál.] 2027: dva testovacie notebooky (macOS a~Windows) na
+    zostavovanie a~testovanie aplikácie na všetkých podporovaných
+    platformách (2\,400~EUR). 2028: drobný materiál (200~EUR).
+  \item[06 Služby.] Každoročne certifikáty na podpisovanie kódu a~vývojárske
+    účty pre distribúciu aplikácie (400~EUR). 2028 navyše: odmeny pre
+    účastníkov pilotného overenia vo forme poukážok, 40 osôb po 30~EUR
+    (1\,200~EUR), a~konferenčný poplatok (400~EUR).
+  \item[07 Energie.] Hradené z~nepriamych nákladov pracoviska.
+  \item[08 Popularizácia.] 2027: webová stránka projektu (200~EUR).
+    2028: workshop pre študentov a~propagačné materiály (600~EUR).
+  \item[09 Nepriame náklady.] 20\,\% z~bežných priamych nákladov
+    na prevádzku pracoviska a~administratívu.
+\end{description}
+
+%=====================================================================
+\cast{VV-D}{Harmonogram projektu}
+
+\noindent
+\begin{tabularx}{\linewidth}{|c|X|c|c|}
+\hline
+ & \textbf{Názov etapy} & \textbf{Začiatok etapy} & \textbf{Koniec etapy} \\ \hline
+E1 & Analýza požiadaviek, návrh a~simulačné overenie modelu záťaže & 01/2027 & 06/2027 \\ \hline
+E2 & Vývoj prototypu aplikácie Black Box (verzie 0.1 a~1.0) & 04/2027 & 01/2028 \\ \hline
+E3 & Pilotné overenie so študentmi počas letného semestra & 02/2028 & 07/2028 \\ \hline
+E4 & Vyhodnotenie, úprava aplikácie (verzia 2.0) a~šírenie výsledkov & 06/2028 & 12/2028 \\ \hline
+\end{tabularx}
+
+\textbf{Zoznam prístrojov v~projekte}
+
+Projekt nepožaduje nákup prístrojov ani zariadení, ktoré by bolo potrebné
+evidovať ako dlhodobý majetok.
+
+%=====================================================================
+\cast{VV-E}{Čestné vyhlásenie štatutárneho zástupcu žiadateľskej organizácie}
+
+Ja, dolu podpísaný prof. Dr. Ing. Oliver Moravčík, štatutárny zástupca
+žiadateľa, záväzne vyhlasujem, že:
+
+\begin{itemize}[nosep,leftmargin=*]
+  \item organizácia má platné osvedčenie o~spôsobilosti vykonávať výskum
+    a~vývoj v~zmysle § 26a zákona č.~172/2005 Z.\,z. v~znení neskorších
+    predpisov a~je evidovaná v~zozname spôsobilých osôb vykonávať výskum
+    a~vývoj;
+  \item všetky informácie obsiahnuté v~dokumentácii návrhu sú pravdivé;
+  \item predložený návrh projektu nebol a~nie je financovaný z~iných zdrojov
+    (národných alebo zahraničných);
+  \item organizácia neposkytne žiadnu nepriamu štátnu pomoc v~zmysle
+    špecifických podmienok výzvy;
+  \item organizácia nie je daňovým dlžníkom, dlžníkom poistného na
+    sociálnom poistení, dlžníkom príspevkov na starobné dôchodkové
+    sporenie ani dlžníkom poistného na zdravotnom poistení;
+  \item organizácia nie je v~likvidácii a~neporušila zákaz nelegálnej práce
+    a~nelegálneho zamestnávania;
+  \item organizácia má vysporiadané finančné vzťahy so štátnym rozpočtom
+    a~bude súčinná pri poskytovaní dokladov podľa zákona č.~523/2004 Z.\,z.;
+  \item som si vedomý povinnosti poskytnúť informácie o~výskume a~vývoji
+    financovanom zo štátneho rozpočtu na účely zverejnenia a~povinnosti
+    popularizovať výsledky riešenia projektu;
+  \item som si vedomý, že APVV zverejní podľa § 19d ods.~4 zákona
+    č.~172/2005 Z.\,z. rozhodnutie o~žiadosti v~rozsahu: číslo žiadosti,
+    názov projektu, žiadateľ;
+  \item predložený návrh projektu po svojej obsahovej stránke nebude
+    financovaný z~národných zdrojov iných grantových schém.
+\end{itemize}
+
+V~prípade vyzvania zo strany APVV sa zaväzujem nahradiť toto čestné
+vyhlásenie aktuálnymi potvrdeniami príslušných úradov.
+
+\medskip
+\begin{tabularx}{\linewidth}{XX}
+Názov žiadateľskej organizácie: & Slovenská technická univerzita v~Bratislave \\
+V~zastúpení: & prof. Dr. Ing. Oliver Moravčík, rektor \\
+Dátum: & 30.~10.~2026 \\[1.5em]
+ & \rule{50mm}{0.4pt}\newline Podpis štatutárneho zástupcu, pečiatka \\
+\end{tabularx}
+
+Čestné vyhlásenie štatutárneho zástupcu spoluriešiteľskej organizácie sa
+neprikladá, pretože projekt nemá spoluriešiteľskú organizáciu.
+
+\end{document}
